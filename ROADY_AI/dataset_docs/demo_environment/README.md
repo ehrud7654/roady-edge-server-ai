@@ -131,7 +131,7 @@ class_id x1 y1 x2 y2 ... xn yn
 
 Edge AI의 목적은 파손 후보를 놓치지 않고 Server AI에 전달하는 것이므로 Recall과 F2-score가 상승한 검수 반영 모델을 우선 사용한다.
 
-최종 운영 후보는 큰 결손 Replay와 신규 마모 데이터를 반영한 `edge_yolo26n_large_missing_replay_v4`이다. 기존 YOLO11n 기반 모델과 별도 손상 분류기는 운영 대상에서 제외한다.
+최종 점자블록 손상 후보 탐지 모델은 큰 결손 Replay와 신규 마모 데이터를 반영한 `edge_yolo26n_large_missing_replay_v4`이다. 사람 발·하체 장애물 탐지용 YOLO11n은 별도 기능이다.
 
 ## Server 학습 결과 관리
 

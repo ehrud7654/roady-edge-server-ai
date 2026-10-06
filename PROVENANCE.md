@@ -12,6 +12,6 @@
 | `experiments/legacy_pre_final/` | 미병합 `feat/roady-ai`의 `4497e07` 등에 대응하는 초기 서버 분석. 최종 코드에 다른 형태로 발전했으나 해당 파일은 final에 없음. |
 | Backend/Embedded/Frontend | 이 후보에 전체 소스를 포함하지 않음. Spring/Redis, ROS/로봇, Vue 화면은 해당 담당자의 팀 결과물. |
 
-`feat/roady-ai` 4커밋의 분류: `a140b31`의 장애물/손상 분류 초기 구현은 후속 AI 코드에 일부 반영됐고 손상 분류기는 final에서 제외됐다. `4497e07`의 초기 mask·severity 구현은 final의 Server 분석 정책과 별개로 남아 archive 가치가 있다. `29ac38a`의 데이터 빌더·검수 도구 상당수는 final에 없는 로컬 실험이다. `68ac238`의 README는 현재 final 문서로 대체되어 중복 복사하지 않았다. 미병합 실험의 파일을 final 경로에 섞지 않았다.
+`feat/roady-ai` 4커밋의 분류: `a140b31`의 장애물 탐지 초기 구현은 후속 AI 코드에 일부 반영됐다. `4497e07`의 초기 mask·severity 구현은 final의 Server 분석 정책과 별개로 남아 archive 가치가 있다. `29ac38a`의 데이터 빌더·검수 도구 상당수는 final에 없는 로컬 실험이다. `68ac238`의 README는 현재 final 문서로 대체되어 중복 복사하지 않았다. 미병합 실험의 파일을 final 경로에 섞지 않았다.
 
 정확한 개인 commit 해시·일시·파일 목록은 별도 보존 자료 `ROADY_PRESERVATION/PERSONAL_COMMIT_EVIDENCE.md`를 참조한다. 이 공개 후보에는 내부 GitLab URL이나 전체 이력을 포함하지 않는다.

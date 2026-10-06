@@ -5,7 +5,7 @@
 - 모델: `YOLO26n Detect`
 - 클래스: `tactile_block`, `damage_candidate`
 - 입력: `batch=1`, `768x768`
-- 기본 운영: 별도 손상 분류기 없이 단일 Detect 모델 사용
+- 기본 운영: 점자블록과 파손 후보를 YOLO26n 단일 Detect 모델로 탐지
 - PyTorch 가중치: `ROADY_AI/models/edge/tactile_damage_candidate_yolo26n_best.pt`
 
 ## Jetson에서 ONNX → TensorRT FP16 변환

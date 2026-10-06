@@ -10,7 +10,7 @@ Edge가 후보와 ROI를 고르고 Server AI가 손상 mask·비율·검토 사�
 
 **황도경 | 전체 AI 담당**
 
-AI-Hub 데이터 분석과 학습 데이터 구성, 시연 환경 구성·현장 데이터 수집·라벨링 및 검수, Edge/Server 모델 학습·평가, Jetson 배포 준비를 맡았습니다. 로봇 카메라에서 놓친 파손과 흙·낙엽 오탐을 직접 확인하고 라벨과 학습 구성을 고쳐 다시 평가했습니다. ROI·대표 frame의 AI 입력 조건과 Server 결과 형식도 정리해 시스템에 연결했습니다. 아래에는 제가 다룬 데이터와 문제 해결 과정을 코드·기록에 맞춰 적었습니다.
+AI-Hub 데이터 분석과 학습 데이터 구성, 시연 환경 구성·현장 데이터 수집·라벨링 및 검수, 점자블록 손상 분석용 Edge/Server 모델과 사람 다리·발 장애물 탐지 모델, Jetson 배포 준비를 맡았습니다. 로봇 카메라에서 놓친 파손과 흙·낙엽 오탐을 직접 확인하고 라벨과 학습 구성을 고쳐 다시 평가했습니다. ROI·대표 frame의 AI 입력 조건과 Server 결과 형식도 정리해 시스템에 연결했습니다. 아래에는 제가 다룬 데이터와 문제 해결 과정을 코드·기록에 맞춰 적었습니다.
 
 ## Architecture
 
@@ -20,12 +20,14 @@ flowchart LR
     D[Dataset 구축·검증] --> T[Edge/Server 학습·평가]
     E[Edge YOLO26n Detect] --> R[ROI·대표 frame 품질 계약]
     S[Server YOLO26s Seg] --> A[Mask·비율·review 정책]
+    O[Obstacle YOLO11n Detect] --> H[사람 다리·발 탐지 신호]
   end
   subgraph Team[팀 시스템]
     C[Robot camera] --> J[Jetson / ROS2]
     B[Spring Boot / Redis] --> DB[(MySQL)] --> F[Vue Dashboard]
   end
   J --> E --> R --> B --> S --> A --> B
+  J --> O
   T -. 모델·설정 .-> E
   T -. 모델·설정 .-> S
 ```
@@ -42,7 +44,11 @@ flowchart LR
 
 최종 팀 모델은 **YOLO26n Detect, 768×768, 2 classes**(`tactile_block`, `damage_candidate`)입니다. 운영 weight 이름은 `tactile_damage_candidate_yolo26n_best.pt`이며 SHA-256은 `ROADY_AI/models/edge/tactile_damage_candidate_yolo26n_best.sha256`에 있습니다. weight는 이 후보에 없습니다. `ROADY_AI/tactile_damage_detect/`에 학습·검증·카메라 추론·Jetson export 코드가 있습니다.
 
-`train.py` 기본값: epochs 30, batch 16, AdamW, lr0 0.00015, seed 42, imgsz 768, close_mosaic 5. `damage_candidate`는 최종 파손 확정이 아닌 Server 분석 후보입니다. 별도 손상 분류기는 최종 운영 흐름에서 빠졌고, 장애물 YOLO11n은 별도 기능입니다.
+`train.py` 기본값: epochs 30, batch 16, AdamW, lr0 0.00015, seed 42, imgsz 768, close_mosaic 5. `damage_candidate`는 최종 파손 확정이 아닌 Server 분석 후보입니다.
+
+## 장애물 탐지 — YOLO11n
+
+점자블록 손상 분석과 별도로, 로봇의 장애물용 USB 카메라에서 사람의 발·하체를 찾는 **YOLO11n Detect** 모델을 개발했습니다. 입력 640, `foot`·`lower_leg` 2클래스이며, 어느 쪽이든 탐지되면 로봇 연동 신호 `human_lower_limb_detected=true`를 만듭니다. COCO Body Part의 해당 클래스 변환본에 의자·책상 다리, 기둥, 그림자 같은 hard negative를 보강하고, 실제 카메라 위치·시점에서 수집·검증하도록 구성했습니다. [학습·데이터 검증·카메라 시험·Jetson TensorRT FP16 export 코드](ROADY_AI/obstacle_lower_limb/)를 포함하며 모델 가중치와 TensorRT engine은 포함하지 않았습니다.
 
 ## Server AI와 Damage Analysis
 
@@ -99,6 +105,7 @@ Python, Ultralytics YOLO, PyTorch, OpenCV, NumPy, FastAPI, Pydantic, PyYAML. 통
 
 ```text
 ROADY_AI/                 # 최종 팀 AI 소스·설정·계약·테스트 (가중치 제외)
+ROADY_AI/obstacle_lower_limb/ # 사람 발·하체 장애물 탐지 YOLO11n
 experiments/data_and_edge/ # 로컬 데이터·Edge 분석 도구
 experiments/server_v5/     # 개인 후속 실험 코드
 experiments/legacy_pre_final/ # 미병합 초기 분석 실험
