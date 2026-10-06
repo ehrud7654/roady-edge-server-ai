@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ROADY Server Damage Analysis Response v2",
+  "type": "object",
+  "required": ["schema_version", "model", "input", "artifacts", "units", "summary", "regions", "analysis", "quality"],
+  "properties": {
+    "schema_version": { "const": "2.0" },
+    "model": { "type": "object", "required": ["name", "task", "class_names", "policy_version", "class_mapping_valid"] },
+    "input": { "type": "object", "required": ["original_image", "analysis_roi", "roi_source", "roi_fallback_used", "frame_quality_verified"] },
+    "artifacts": { "type": "object", "required": ["original_image", "overlay_image", "mask_image"] },
+    "units": {
+      "type": "array",
+      "items": { "type": "object", "required": ["local_unit_id", "analysis_unit", "bbox_xyxy", "polygon", "tactile", "expected_region_status", "damage_types", "analysis"] }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["damage_detected", "estimated_severity", "repair_priority", "worst_unit_id", "dominant_damage_type", "max_damage_ratio_percent", "mean_damage_ratio_percent", "not_estimable_unit_count", "review_required_unit_count", "review_required", "review_reasons", "advisory_only"]
+    },
+    "regions": { "description": "Deprecated v1 compatibility fields", "type": "object", "required": ["tactile_block", "damage"] },
+    "analysis": {
+      "description": "Deprecated v1 compatibility fields",
+      "type": "object",
+      "required": ["damage_detected", "damage_ratio_percent", "estimated_severity", "repair_priority", "review_required", "review_reasons", "advisory_only", "deprecated"]
+    },
+    "quality": { "type": "object" }
+  }
+}

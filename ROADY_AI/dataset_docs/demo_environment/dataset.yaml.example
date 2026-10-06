@@ -1,0 +1,10 @@
+# S15P11A404-261 시연환경 데이터셋 설정 예시
+# 실제 데이터 루트에 맞게 path를 수정한다.
+path: /path/to/edge_yolo26n_detect_review_ft_v3
+train: train.txt
+val: images/val
+test: images/test
+
+names:
+  0: tactile_block
+  1: damage_candidate

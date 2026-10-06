@@ -1,0 +1,44 @@
+policy:
+  version: "draft-1"
+  advisory_only: true
+
+damage_types:
+  missing:
+    weight: 1.0
+    minimum_severity: moderate
+  crack:
+    weight: 40.0
+    minimum_severity: minor
+  wear:
+    weight: 40.0
+    minimum_severity: normal
+
+ratio_thresholds:
+  normal_max_percent: 0.5
+  minor_max_percent: 5.0
+  moderate_max_percent: 15.0
+
+review:
+  boundary_margin_percent: 1.0
+  tactile_confidence: 0.25
+  damage_confidence: 0.05
+  # obstruction(거치물) 클래스가 모델에 있을 때만 사용된다(5클래스 모델).
+  obstruction_confidence: 0.25
+  # ROI 면적 대비 obstruction 마스크 비율이 이 값 이상이면 가림으로 보고 판단 보류로 전환.
+  obstruction_coverage_min: 0.05
+  minimum_damage_confidence_for_auto: 0.70
+  duplicate_mask_iou: 0.70
+  minimum_tactile_pixels: 100
+  model_quality_gate:
+    minimum_positive_damage_dice: 0.70
+    maximum_ratio_mae_pp: 3.0
+    minimum_severity_macro_f1: 0.80
+    minimum_estimable_coverage: 0.80
+
+analysis_units:
+  block_aspect_ratio_min: 0.60
+  block_aspect_ratio_max: 1.67
+  expected_region:
+    minimum_neighbor_count: 3
+    maximum_size_cv: 0.20
+    maximum_spacing_cv: 0.25

@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ROADY AI Server Response v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "damaged",
+    "damage_score",
+    "damage_type",
+    "repair_required",
+    "repair_priority",
+    "confidence_score",
+    "analysis_detail"
+  ],
+  "properties": {
+    "damaged": { "type": ["boolean", "null"] },
+    "damage_score": { "type": ["integer", "null"], "minimum": 0, "maximum": 100 },
+    "damage_type": {
+      "type": ["string", "null"],
+      "enum": ["SMALL_MISSING", "LARGE_MISSING", "CRACK", "WEAR", null]
+    },
+    "repair_required": { "type": ["boolean", "null"] },
+    "repair_priority": {
+      "type": ["string", "null"],
+      "enum": ["LOW", "NORMAL", "HIGH", "URGENT", null]
+    },
+    "confidence_score": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "maximum": 1
+    },
+    "analysis_detail": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "model",
+        "aggregation",
+        "damage_ratio",
+        "damage_ratio_percent",
+        "estimated_severity",
+        "estimated_severity_label",
+        "review_required",
+        "review_reasons",
+        "advisory_only",
+        "regions",
+        "units",
+        "summary",
+        "quality",
+        "images",
+        "inference_ms"
+      ],
+      "properties": {
+        "schema_version": { "const": "2.0" },
+        "model": { "type": "object" },
+        "aggregation": { "type": "object" },
+        "damage_ratio": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "damage_ratio_percent": { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
+        "estimated_severity": {
+          "type": ["string", "null"],
+          "enum": ["normal", "minor", "moderate", "severe", null]
+        },
+        "estimated_severity_label": { "type": ["string", "null"] },
+        "review_required": { "type": "boolean" },
+        "review_reasons": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["code", "message"],
+            "properties": {
+              "code": { "type": "string" },
+              "message": { "type": "string" }
+            }
+          }
+        },
+        "advisory_only": { "type": "boolean" },
+        "regions": { "type": "object" },
+        "units": { "type": "array", "items": { "type": "object" } },
+        "summary": { "type": "object" },
+        "quality": { "type": "object" },
+        "images": { "type": "array", "items": { "type": "object" } },
+        "inference_ms": { "type": "number", "minimum": 0 }
+      }
+    }
+  }
+}

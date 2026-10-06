@@ -1,0 +1,9 @@
+# train.py resolves this path against the ROADY workspace and writes a runtime YAML.
+path: ROADY_AI/datasets/obstacle_lower_limb_v1
+train: images/train
+val: images/val
+test: images/test
+
+names:
+  0: foot
+  1: lower_leg

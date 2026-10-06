@@ -1,0 +1,18 @@
+pipeline: two_stage
+stage_1:
+  task: segment
+  purpose: tactile_block_roi
+  weights: ai/runs/baseline_1800_3e/weights/best.pt
+  imgsz: 512
+stage_2:
+  task: segment
+  purpose: damage_only
+  model: yolo11n-seg.pt
+  imgsz: 896
+  epochs: 30
+  batch: 8
+  roi_padding: 0.15
+  positive_oversample: 3
+targets:
+  damage_recall: 0.70
+  damage_f2: 0.65

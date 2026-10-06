@@ -1,0 +1,30 @@
+# Train 전용 초기 증강 설정. Validation/Test에는 확률적 증강을 적용하지 않는다.
+edge:
+  hsv_h: 0.015
+  hsv_s: 0.5
+  hsv_v: 0.3
+  degrees: 5.0
+  translate: 0.1
+  scale: 0.2
+  shear: 0.0
+  perspective: 0.0005
+  fliplr: 0.5
+  flipud: 0.0
+  mosaic: 0.2
+  mixup: 0.0
+  copy_paste: 0.0
+
+server:
+  hsv_h: 0.015
+  hsv_s: 0.4
+  hsv_v: 0.25
+  degrees: 5.0
+  translate: 0.08
+  scale: 0.15
+  shear: 0.0
+  perspective: 0.0003
+  fliplr: 0.5
+  flipud: 0.0
+  mosaic: 0.1
+  mixup: 0.0
+  copy_paste: 0.0

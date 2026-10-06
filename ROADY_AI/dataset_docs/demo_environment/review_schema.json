@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "complete": true,
+  "missed_damage": false,
+  "note": "검수 메모",
+  "boxes": {
+    "image_stem-0": "true_damage",
+    "image_stem-1": "false_soil"
+  },
+  "manual_boxes": [
+    {
+      "id": "manual-id",
+      "x": 0.5,
+      "y": 0.5,
+      "w": 0.1,
+      "h": 0.1,
+      "class_id": 1,
+      "source": "manual_missed"
+    }
+  ]
+}

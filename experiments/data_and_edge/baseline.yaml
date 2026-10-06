@@ -1,0 +1,17 @@
+task: segment
+model: yolo11n-seg.pt
+imgsz: 640
+epochs: 50
+batch: 8
+classes:
+  0: tactile_block
+  1: damage
+primary_metrics:
+  - damage_recall
+  - damage_f2
+  - mask_map50_95
+  - false_positives_per_image
+split_policy: source_zip_and_capture_date_grouped
+edge_export:
+  format: engine
+  precision: fp16
