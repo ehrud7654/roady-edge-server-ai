@@ -1,14 +1,16 @@
 # ROADY — Edge·Server AI 기반 점자블록 손상 분석
 
-순찰 로봇의 영상에서 점자블록 손상 후보를 Jetson에서 찾고, 서버 Segmentation 분석을 시설 관리 화면까지 연결한 AIoT Computer Vision 팀 프로젝트입니다.
+순찰 로봇의 영상에서 점자블록 손상 후보를 Jetson에서 찾고, 서버 Segmentation 분석을 시설 관리 화면까지 연결한 AIoT Computer Vision 프로젝트입니다. 저는 ROADY의 전체 AI를 맡아 공개 데이터 검토부터 시연 환경 데이터 수집·라벨링, 모델 개발과 현장 검증까지 진행했습니다.
 
 ## Overview
 
-Edge가 후보와 ROI를 고르고 Server AI가 손상 mask·비율·검토 사유를 반환합니다. Backend는 결과를 저장하고 Vue 관제 화면에 연결합니다. 하나의 모델 성능보다 **Dataset → Edge → Server → Evaluation → Deployment → Integration**의 전체 AI 흐름을 설계한 경험에 초점을 둡니다.
+Edge가 후보와 ROI를 고르고 Server AI가 손상 mask·비율·검토 사유를 반환합니다. Backend는 결과를 저장하고 Vue 관제 화면에 연결합니다. 공개 이미지로 학습한 모델을 실제 로봇 카메라에 적용하면서 생긴 미탐·오탐을 데이터와 라벨부터 다시 살펴보고, Edge와 Server 모델을 반복해서 바꿨습니다.
 
 ## My Role
 
-**황도경 — 팀 내 AI 단독 담당.** 데이터 구축·가공·검증, Edge/Server 모델 학습·평가, Jetson 모델 준비, AI 입력·응답 계약 및 시스템 연동까지 AI 개발 흐름을 담당했습니다. 1.448TB 전체 자료를 혼자 촬영·라벨링했다는 뜻은 아닙니다. 일부 FastAPI wrapper·후속 점수 정책, ROS 런타임, Backend, Frontend는 다른 팀원이 작성하거나 함께 연동했습니다. [PROVENANCE.md](PROVENANCE.md)에 기여 경계를 정리했습니다.
+**황도경 | 전체 AI 담당**
+
+AI-Hub 데이터 분석과 학습 데이터 구성, 시연 환경 구성·현장 데이터 수집·라벨링 및 검수, Edge/Server 모델 학습·평가, Jetson 배포 준비를 맡았습니다. 로봇 카메라에서 놓친 파손과 흙·낙엽 오탐을 직접 확인하고 라벨과 학습 구성을 고쳐 다시 평가했습니다. ROI·대표 frame의 AI 입력 조건과 Server 결과 형식도 정리해 시스템에 연결했습니다. 아래에는 제가 다룬 데이터와 문제 해결 과정을 코드·기록에 맞춰 적었습니다.
 
 ## Architecture
 
@@ -46,11 +48,25 @@ flowchart LR
 
 최종 배포 기본은 **YOLO26s Segmentation, 768×768, 5 classes**(`tactile_block`, `missing`, `crack`, `wear`, `obstruction`)의 `yolo26s_seg_multiclass_v4_best.pt`입니다. v3는 rollback 후보입니다. `server_damage_analysis/`의 analyzer·expected region·policy 코드가 mask와 비율 계산을 보여줍니다.
 
-균열·마모는 tactile mask와의 교집합을 사용합니다. 결손은 유효한 예상 블록 영역에서 비율을 추정하고, 불가능하면 `null`로 유지합니다. `missing`은 small/large가 별도 학습 클래스가 아니며 **신뢰 가능한 개별 블록 비율 15%**로 후처리 구분합니다. `obstruction`과 품질 문제는 `review_required`로 연결합니다. `advisory_only=true`인 프로젝트 내부 잠정 정책이며 행정적 확정 기준이 아닙니다. FastAPI wrapper와 후속 점수/대표 유형 수정에는 팀원 기여가 있습니다.
+균열·마모는 tactile mask와의 교집합을 사용합니다. 결손은 유효한 예상 블록 영역에서 비율을 추정하고, 불가능하면 `null`로 유지합니다. `missing`은 small/large가 별도 학습 클래스가 아니며 **신뢰 가능한 개별 블록 비율 15%**로 후처리 구분합니다. `obstruction`과 품질 문제는 `review_required`로 연결합니다. `advisory_only=true`인 프로젝트 내부 잠정 정책이며 행정적 확정 기준이 아닙니다.
 
 ## Dataset Pipeline
 
-공개 자료는 초기 라벨 형식·구조 설계에 활용했고, 최종 시연 모델은 현장 휴대폰·로봇 카메라 자료와 hard negative·replay 검수를 중심으로 구성했습니다. Edge는 YOLO box, Server는 YOLO segmentation polygon 라벨을 사용합니다. 로컬 audit·builder·hard example mining 도구 일부를 `experiments/data_and_edge/`에 보존했습니다. 실제 이미지·라벨은 포함하지 않았고 원본 라이선스와 split 중복은 별도 검증이 필요합니다.
+처음에는 AI-Hub의 [보행 안전을 위한 도로 시설물 데이터](https://www.aihub.or.kr/aihubdata/data/view.do?dataSetSn=513)와 [인도보행 영상](https://aihub.or.kr/aihubdata/data/view.do?dataSetSn=189)을 사용했습니다. 초기 통합 단계에서 각각 26,595장과 8,137장의 점자블록 관련 이미지를 선별해 **원본 기준 34,732장**으로 구성했습니다. Polygon 라벨을 Edge 학습용 YOLO box로 변환하고, 클래스 매핑·이미지/라벨 대응·좌표 범위·중복을 검증했습니다. 이 수치는 초기 공개 데이터 통합본이며 최종 시연 학습 세트의 크기가 아닙니다.
+
+공개 데이터만으로는 시연 장소의 파손 모양과 로봇 카메라 시점을 충분히 다루기 어려웠습니다. 저는 **시연 환경을 직접 구성하고 휴대폰·로봇 카메라로 현장 데이터를 수집**해 결손·균열·마모·거치물 사례를 보강했습니다. Edge용 box와 Server용 polygon을 라벨링·수정하고, 미탐 위치를 수동 추가하고 흙·낙엽 등 오탐 라벨을 제거했습니다. 촬영 원본과 연속 frame이 Train/Validation/Test에 섞이지 않도록 촬영 그룹으로 분리하고, 고정 Val/Test에 겹치는 원본은 재학습에서 제외했습니다. [시연환경 데이터셋 문서](ROADY_AI/dataset_docs/demo_environment/README.md)에 클래스·라벨 기준·split 원칙을 기록했습니다.
+
+실제 이미지·라벨과 AI-Hub 원본은 저장소에 넣지 않았습니다. 대신 [`build_dataset.py`](ROADY_AI/tactile_damage_detect/build_dataset.py), 검증 코드와 [`experiments/data_and_edge/`](experiments/data_and_edge/)에 데이터 변환·검수 도구를 남겼습니다.
+
+## Troubleshooting
+
+| 겪은 문제 | 확인하고 바꾼 것 | 결과 |
+|---|---|---|
+| 작은 손상 미탐 | 초기 실패 사례를 손상 면적별로 나누어 보고, 점자블록 중심 ROI crop·겹침 tile·768 입력과 threshold를 검토했습니다. | 작은 손상이 전체 이미지에서 차지하는 비율이 작다는 병목을 찾아 ROI 중심 학습으로 방향을 바꿨습니다. |
+| 흙·낙엽·그림자 오탐과 현장 미탐 | 현장 예측 233건의 검수 기록을 바탕으로 잘못된 box를 제거하고, 누락된 파손 box 50여 개를 수동 보강했습니다. 흙·낙엽은 파손 양성이 아닌 hard negative로 관리했습니다. | 교정한 라벨과 hard negative를 재학습 데이터에 반영했습니다. |
+| 큰 결손 누락 | 현장 영상의 hard frame 42개와 수동 미탐 box 99개로 Edge v4 replay를 구성했습니다. | 재학습에 넣은 사례는 confidence 0.15에서 99개 중 88개 box를 다시 찾았습니다. 이는 독립 Test 결과가 아닙니다. |
+| 가림 물체와 면적 계산 불가 | 점자블록 위 거치물은 Server의 `obstruction`으로 분리하고, 신뢰할 수 없는 mask·예상 영역에서는 손상 비율을 0으로 확정하지 않고 검토 대상으로 돌렸습니다. | 판단하기 어려운 상황을 `review_required`로 명시해 잘못된 자동 확정을 줄이도록 설계했습니다. |
+| Jetson 처리량 | callback 시간과 종단간 FPS를 따로 측정하고 6프레임마다 처리하는 구성을 확인했습니다. | 실제 종단간 **3.59 FPS**를 확인했고, 15 FPS 목표와의 차이를 다음 최적화 과제로 남겼습니다. |
 
 ## Evaluation
 
@@ -93,6 +109,6 @@ PROVENANCE.md              # 코드 출처와 기여 경계
 
 데이터·weight 없이 전체 학습/추론은 재현할 수 없습니다. `ROADY_AI/requirements*.txt`를 참고해 Python 환경을 구성하고, 사용 권한이 있는 자체 데이터의 `dataset.yaml`과 모델 경로를 지정하십시오. syntax/JSON과 weight 불필요 정책 테스트는 확인할 수 있습니다. GPU 학습, Jetson 변환, 실제 로봇·Backend 종단간 실행은 이 후보에서 수행하지 않았습니다.
 
-## Team Project와 Contribution Boundary
+## 팀과의 연결
 
-ROADY 전체는 팀 프로젝트입니다. **AI 담당자는 황도경 한 명**이었지만 AI 관련 모든 코드의 모든 줄을 혼자 작성한 것은 아닙니다. 팀원이 작성한 FastAPI wrapper·후속 점수·Embedded·Backend·Frontend는 협업 또는 팀 결과물입니다. 특히 Frontend는 황도경 개인 기여가 아닙니다. 이 공개본에는 촬영물을 포함하지 않았으며, 팀 소스의 공개 권한은 게시자가 확인해야 합니다.
+ROADY는 팀 프로젝트입니다. 저는 **전체 AI를 담당**하고, Embedded·Backend·Frontend 담당자와 입력·결과 형식을 맞춰 서비스를 연결했습니다. 각 코드의 출처와 협업 영역은 [PROVENANCE.md](PROVENANCE.md)에 정리했습니다. 이 공개본에는 원본 촬영물과 모델 가중치를 포함하지 않았습니다.
